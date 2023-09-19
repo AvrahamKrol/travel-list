@@ -1,20 +1,34 @@
 import { useState } from 'react';
 
-const initialItems = [
-  { id: 1, description: 'Passports', quantity: 1, packed: true },
-  { id: 2, description: 'Socks', quantity: 12, packed: false },
-  { id: 2, description: 'Socks', quantity: 12, packed: false },
-  { id: 2, description: 'Socks', quantity: 12, packed: false },
-  { id: 2, description: 'Socks', quantity: 12, packed: true },
-  { id: 2, description: 'Socks', quantity: 12, packed: false },
-];
-
 function App() {
+  const [items, setItems] = useState([]);
+
+  function addItemHandler(newItem) {
+    setItems((items) => [newItem, ...items]);
+  }
+
+  function deleteItemHandler(id) {
+    setItems((items) => items.filter((item) => item.id !== id));
+    console.log(items);
+  }
+
+  function updateItemHandler(id, packedStatus) {
+    setItems((items) =>
+      items.map((item) =>
+        item.id === id ? { ...item, packed: packedStatus } : item
+      )
+    );
+  }
+
   return (
     <div className="app">
       <Logo />
-      <Form />
-      <PackingList />
+      <Form onAddItem={addItemHandler} />
+      <PackingList
+        items={items}
+        onDeleteItem={deleteItemHandler}
+        onUpdateItem={updateItemHandler}
+      />
       <Stats />
     </div>
   );
@@ -24,7 +38,7 @@ function Logo() {
   return <h1>Far Away 🧳</h1>;
 }
 
-function Form() {
+function Form({ onAddItem }) {
   const [description, setDesc] = useState('');
   const [quantity, setQuantity] = useState(1);
 
@@ -34,10 +48,10 @@ function Form() {
     if (!description) return;
 
     const newItem = { description, quantity, packed: false, id: Date.now() };
+    onAddItem(newItem);
     setDesc('');
     setQuantity(1);
     initialItems.push(newItem);
-    console.log(newItem, initialItems);
   }
 
   return (
@@ -61,14 +75,23 @@ function Form() {
   );
 }
 
-function PackingList() {
+function PackingList({ items, onDeleteItem, onUpdateItem }) {
   return (
     <div className="list">
-      <ul>
-        {initialItems.map((item) => (
-          <Item item={item} />
-        ))}
-      </ul>
+      {items.length > 0 ? (
+        <ul>
+          {items?.map((item) => (
+            <Item
+              key={item?.id}
+              item={item}
+              onUpdateItem={onUpdateItem}
+              onDeleteItem={onDeleteItem}
+            />
+          ))}
+        </ul>
+      ) : (
+        <p>empty list</p>
+      )}
     </div>
   );
 }
@@ -81,13 +104,20 @@ function Stats() {
   );
 }
 
-function Item({ item }) {
+function Item({ item, onDeleteItem, onUpdateItem }) {
   return (
-    <li key={item.id}>
+    <li>
+      <input
+        type="checkbox"
+        value={item.packed}
+        onChange={(e) => {
+          onUpdateItem(item.id, e.target.checked);
+        }}
+      />
       <span style={item.packed ? { textDecoration: 'line-through' } : {}}>
         {item.quantity} {item.description}
       </span>
-      <button>❌</button>
+      <button onClick={() => onDeleteItem(item?.id)}>❌</button>
     </li>
   );
 }
