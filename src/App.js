@@ -51,7 +51,6 @@ function Form({ onAddItem }) {
     onAddItem(newItem);
     setDesc('');
     setQuantity(1);
-    initialItems.push(newItem);
   }
 
   return (
